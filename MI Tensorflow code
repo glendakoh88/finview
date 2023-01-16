@@ -20,15 +20,16 @@ def model_(evidence,labels):
     checkpoint_dir=os.path.dirname(checkpoint_path)
     print(checkpoint_dir)
     cp_callback=tf.keras.callbacks.ModelCheckpoint(checkpoint_path,save_model=True,verbose=1)
-    model.fit(evidence, labels, epochs=3, callbacks=cp_callback)
+    model.fit(evidence, labels, epochs=100, callbacks=cp_callback)
+#take evidence[0] as example of test value can change 0 to other numbers to mimick other test values
     print("input_test_value, {}".format(evidence[0]))
     print("corresponding predicted savings at 50")
     print(model.predict(np.array(evidence[0]).reshape(1,len(evidence[0]))))
-    return checkpoint_path
+    return (checkpoint_path,model.predict(np.array(evidence[0]).reshape(1,len(evidence[0]))))
 
 # Read training data in from file 
 def data_(x):
-    with open(r"/Users/glendakoh88gmail.com/Downloads/MOCK_DATA-2.csv") as f:
+    with open(r"/Users/glendakoh88gmail.com/Downloads/merge-csv.com__63c2666f327fd.csv") as f:
         reader = csv.reader(f)
         next(reader)
         next(reader)
@@ -77,17 +78,28 @@ def datainput_(x):
         return evidence
         
 def start_(saved_models):
-    x=input("the years of data u have from 20 inclusive, the more the data the more accurate!!!!:")
+    x=input("the years of data u have from 20 inclusive, best 10 and above!!!:")
     if int(x) not in saved_models:
         n=data_(int(x))
-        saved_models[int(x)]=n
+        saved_models[int(x)]=n[0]
         print(saved_models)
+        predicted_=n[1]
     else:
         new_model = tf.keras.models.load_model(saved_models[int(x)])
+#take evidence[0] as example of test value can change 0 to other numbers to mimick other test values
         print("input_test_value, {}".format(datainput_(int(x))[0]))
         print("corresponding predicted savings at 50")
-        print(new_model.predict(np.array(datainput_(int(x))[0]).reshape(1,len(datainput_(int(x))[0]))))
+        predicted_=new_model.predict(np.array(datainput_(int(x))[0]).reshape(1,len(datainput_(int(x))[0])))
+        print(predicted_)
+        
+    insurance_amount=int(input("how much insurance do you have:"))
+    age_current=int(input("what is your age:"))
+    for i in range(50-age_current):
+        insurance_amount=insurance_amount*1.03 
+    print("your networth at 50 is {}" .format(insurance_amount+predicted_))
+    
     return start_(saved_models)
+
 #creating a dictionary for saved models such that data input of same range of years (e.g savings from 20-25) 
 #can be fitted into trained AI models immediately thus only one training for each data form needed  
 saved_models={}
